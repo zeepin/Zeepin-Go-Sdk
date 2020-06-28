@@ -1,20 +1,18 @@
-package contract
+package Zeepin_Go_Sdk
 
 import (
 	"encoding/hex"
 	"fmt"
 	"github.com/zeepin/ZeepinChain-Crypto/keypair"
-	"github.com/zeepin/Zeepin-Go-Sdk/account"
 	"testing"
 	"time"
-	sdk "github.com/zeepin/Zeepin-Go-Sdk"
 )
 
 var (
-	testZptSdk   *sdk.ZeepinSdk
-	testWallet   *account.Wallet
+	testZptSdk   *ZeepinSdk
+	testWallet   *Wallet
 	testPasswd   = []byte("11")
-	testDefAcc   *account.Account
+	testDefAcc   *Account
 	testGasPrice = uint64(1)
 	testGasLimit = uint64(20000)
 )
@@ -62,14 +60,14 @@ func TestZptId_RegIDWithAttributes(t *testing.T) {
 		t.Errorf("TestZptId_RegIDWithPublicKey GetControllerByIndex error:%s", err)
 		return
 	}
-	attributes := make([]*account.DDOAttribute, 0)
-	attr1 := &account.DDOAttribute{
+	attributes := make([]*DDOAttribute, 0)
+	attr1 := &DDOAttribute{
 		Key:       []byte("Hello"),
 		Value:     []byte("World"),
 		ValueType: []byte("string"),
 	}
 	attributes = append(attributes, attr1)
-	attr2 := &account.DDOAttribute{
+	attr2 := &DDOAttribute{
 		Key:       []byte("Foo"),
 		Value:     []byte("Bar"),
 		ValueType: []byte("string"),
@@ -187,8 +185,8 @@ func TestZptId_Key(t *testing.T) {
 		return
 	}
 
-	if state != account.KEY_STATUS_REVOKE {
-		t.Errorf("TestZptId_Key remove key state != %s", account.KEY_STATUS_REVOKE)
+	if state != KEY_STATUS_REVOKE {
+		t.Errorf("TestZptId_Key remove key state != %s", KEY_STATUS_REVOKE)
 		return
 	}
 
@@ -197,8 +195,8 @@ func TestZptId_Key(t *testing.T) {
 		t.Errorf("TestZptId_Key GetKeyState error:%s", err)
 		return
 	}
-	if state != account.KEY_STSTUS_IN_USE {
-		t.Errorf("TestZptId_Key GetKeyState state != %s", account.KEY_STSTUS_IN_USE)
+	if state != KEY_STSTUS_IN_USE {
+		t.Errorf("TestZptId_Key GetKeyState state != %s", KEY_STSTUS_IN_USE)
 		return
 	}
 }
@@ -221,14 +219,14 @@ func TestZptId_Attribute(t *testing.T) {
 	}
 	testZptSdk.WaitForGenerateBlock(30*time.Second, 1)
 
-	attributes := make([]*account.DDOAttribute, 0)
-	attr1 := &account.DDOAttribute{
+	attributes := make([]*DDOAttribute, 0)
+	attr1 := &DDOAttribute{
 		Key:       []byte("Foo"),
 		Value:     []byte("Bar"),
 		ValueType: []byte("string"),
 	}
 	attributes = append(attributes, attr1)
-	attr2 := &account.DDOAttribute{
+	attr2 := &DDOAttribute{
 		Key:       []byte("Hello"),
 		Value:     []byte("World"),
 		ValueType: []byte("string"),

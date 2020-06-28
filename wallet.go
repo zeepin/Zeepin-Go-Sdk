@@ -1,4 +1,4 @@
-package account
+package Zeepin_Go_Sdk
 
 import (
 	"encoding/hex"
@@ -12,7 +12,6 @@ import (
 	"io/ioutil"
 	"os"
 	"sync"
-	sdk "github.com/zeepin/Zeepin-Go-Sdk"
 )
 
 var DEFAULT_WALLET_NAME = "MyWallet"
@@ -35,7 +34,7 @@ type Wallet struct {
 	identityLabelMap map[string]*Identity
 	defIdentity      *Identity
 	path             string
-	zptSdk           *sdk.ZeepinSdk
+	zptSdk           *ZeepinSdk
 	lock             sync.RWMutex
 }
 

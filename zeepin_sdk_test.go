@@ -10,7 +10,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/tyler-smith/go-bip39"
-	"github.com/zeepin/Zeepin-Go-Sdk/account"
 	"github.com/zeepin/Zeepin-Go-Sdk/utils"
 	"github.com/zeepin/ZeepinChain-Crypto/signature"
 	"github.com/zeepin/ZeepinChain/common"
@@ -21,9 +20,9 @@ import (
 
 var (
 	TestZptSdk   *ZeepinSdk
-	TestWallet   *account.Wallet
+	TestWallet   *Wallet
 	TestPasswd   = []byte("11")
-	TestDefAcc   *account.Account
+	TestDefAcc   *Account
 	TestGasPrice = uint64(1)
 	TestGasLimit = uint64(20000)
 )
@@ -68,18 +67,18 @@ func TestZeepinSdk_ParseNativeTxPayload2(t *testing.T) {
 	var err error
 	assert.Nil(t, err)
 	pri, err := common.HexToBytes("75de8489fcb2dcaf2ef3cd607feffde18789de7da129b5e97c81e001793cb7cf")
-	acc, err := account.NewAccountFromPrivateKey(pri, signature.SHA256withECDSA)
+	acc, err := NewAccountFromPrivateKey(pri, signature.SHA256withECDSA)
 
 	pri2, err := common.HexToBytes("75de8489fcb2dcaf2ef3cd607feffde18789de7da129b5e97c81e001793cb8cf")
 	assert.Nil(t, err)
 
 	pri3, err := common.HexToBytes("75de8489fcb2dcaf2ef3cd607feffde18789de7da129b5e97c81e001793cb9cf")
 	assert.Nil(t, err)
-	acc, err = account.NewAccountFromPrivateKey(pri, signature.SHA256withECDSA)
+	acc, err = NewAccountFromPrivateKey(pri, signature.SHA256withECDSA)
 
-	acc2, err := account.NewAccountFromPrivateKey(pri2, signature.SHA256withECDSA)
+	acc2, err := NewAccountFromPrivateKey(pri2, signature.SHA256withECDSA)
 
-	acc3, err := account.NewAccountFromPrivateKey(pri3, signature.SHA256withECDSA)
+	acc3, err := NewAccountFromPrivateKey(pri3, signature.SHA256withECDSA)
 	amount := 1000000000
 	txFrom, err := TestZptSdk.Native.Zpt.NewTransferFromTransaction(500, 20000, acc.Address, acc2.Address, acc3.Address, uint64(amount))
 	assert.Nil(t, err)
@@ -101,18 +100,18 @@ func TestZeepinSdk_ParseNativeTxPayload(t *testing.T) {
 	var err error
 	assert.Nil(t, err)
 	pri, err := common.HexToBytes("75de8489fcb2dcaf2ef3cd607feffde18789de7da129b5e97c81e001793cb7cf")
-	acc, err := account.NewAccountFromPrivateKey(pri, signature.SHA256withECDSA)
+	acc, err := NewAccountFromPrivateKey(pri, signature.SHA256withECDSA)
 
 	pri2, err := common.HexToBytes("75de8489fcb2dcaf2ef3cd607feffde18789de7da129b5e97c81e001793cb8cf")
 	assert.Nil(t, err)
 
 	pri3, err := common.HexToBytes("75de8489fcb2dcaf2ef3cd607feffde18789de7da129b5e97c81e001793cb9cf")
 	assert.Nil(t, err)
-	acc, err = account.NewAccountFromPrivateKey(pri, signature.SHA256withECDSA)
+	acc, err = NewAccountFromPrivateKey(pri, signature.SHA256withECDSA)
 
-	acc2, err := account.NewAccountFromPrivateKey(pri2, signature.SHA256withECDSA)
+	acc2, err := NewAccountFromPrivateKey(pri2, signature.SHA256withECDSA)
 
-	acc3, err := account.NewAccountFromPrivateKey(pri3, signature.SHA256withECDSA)
+	acc3, err := NewAccountFromPrivateKey(pri3, signature.SHA256withECDSA)
 	y, _ := common.HexToBytes(acc.Address.ToHexString())
 
 	fmt.Println("acc:", common.ToHexString(common.ToArrayReverse(y)))
@@ -172,7 +171,7 @@ func TestZeepinSdk_GenerateMnemonicCodesStr(t *testing.T) {
 		assert.Nil(t, err)
 		private, err := TestZptSdk.GetPrivateKeyFromMnemonicCodesStrBip44(mnemonic, 0)
 		assert.Nil(t, err)
-		acc, err := account.NewAccountFromPrivateKey(private, signature.SHA256withECDSA)
+		acc, err := NewAccountFromPrivateKey(private, signature.SHA256withECDSA)
 		assert.Nil(t, err)
 		si, err := signature.Sign(acc.SigScheme, acc.PrivateKey, []byte("test"), nil)
 		boo := signature.Verify(acc.PublicKey, []byte("test"), si)
@@ -243,7 +242,7 @@ func Init() {
 	TestZptSdk.NewRpcClient().SetAddress("http://localhost:20336")
 
 	var err error
-	var wallet *account.Wallet
+	var wallet *Wallet
 	if !common.FileExisted("./wallet.dat") {
 		wallet, err = TestZptSdk.CreateWallet("./wallet.dat")
 		if err != nil {
@@ -312,7 +311,7 @@ func TestZpt_Transfer(t *testing.T) {
 
 func TestGALA_WithDrawGALA(t *testing.T) {
 	Init()
-	unboundGALA, err := TestZptSdk.Native.Gala.UnboundGala(TestDefAcc.Address)
+	unboundGALA, err := TestZptSdk.Native.Gala.UnboundGala(TestDefAcc.Address.ToBase58())
 	if err != nil {
 		t.Errorf("UnboundGALA error:%s", err)
 		return

@@ -23,8 +23,6 @@ import (
 	"github.com/zeepin/ZeepinChain/core/payload"
 	"github.com/zeepin/ZeepinChain/core/types"
 	s "github.com/zeepin/ZeepinChain-Crypto/signature"
-	"github.com/zeepin/Zeepin-Go-Sdk/contract"
-	"github.com/zeepin/Zeepin-Go-Sdk/account"
 )
 
 func init() {
@@ -34,35 +32,39 @@ func init() {
 //ZeepinSdk is the main struct for user
 type ZeepinSdk struct {
 	client.ClientMgr
-	Native *contract.NativeContract
-	WasmVM  *contract.WasmVMContract
+	Native *NativeContract
+	WasmVM  *WasmVMContract
 }
 
 //NewZeepinSdk return ZeepinSdk.
 func NewZeepinSdk() *ZeepinSdk {
 	zptSdk := &ZeepinSdk{}
-	native := contract.NewNativeContract(zptSdk)
+	native := NewNativeContract(zptSdk)
 	zptSdk.Native = native
-	wasmVM := contract.NewWasmVMContract(zptSdk)
+	wasmVM := NewWasmVMContract(zptSdk)
 	zptSdk.WasmVM = wasmVM
 	return zptSdk
 }
 
 //CreateWallet return a new wallet
-func (this *ZeepinSdk) CreateWallet(walletFile string) (*account.Wallet, error) {
+func (this *ZeepinSdk) CreateWallet(walletFile string) (*Wallet, error) {
 	if utils.IsFileExist(walletFile) {
 		return nil, fmt.Errorf("wallet:%s has already exist", walletFile)
 	}
-	return account.NewWallet(walletFile), nil
+	return NewWallet(walletFile), nil
 }
 
 //OpenWallet return a wallet instance
-func (this *ZeepinSdk) OpenWallet(walletFile string) (*account.Wallet, error) {
-	return account.OpenWallet(walletFile)
+func (this *ZeepinSdk) OpenWallet(walletFile string) (*Wallet, error) {
+	return OpenWallet(walletFile)
 }
 
-func (this *ZeepinSdk) NewAccountFromPrivateKey(privateKey []byte, signatureScheme s.SignatureScheme) (*account.Account, error){
-	return account.NewAccountFromPrivateKey(privateKey, signatureScheme)
+func (this *ZeepinSdk) NewAccountFromPrivateKey(privateKey string, signatureScheme s.SignatureScheme) (*Account, error){
+	pri, err := common.HexToBytes(privateKey)
+	if err != nil{
+		return nil, fmt.Errorf("newAccount From PrivateKey error for PrivateKey")
+	}
+	return NewAccountFromPrivateKey(pri, signatureScheme)
 }
 
 func ParseNativeTxPayload(raw []byte) (map[string]interface{}, error) {
@@ -128,9 +130,9 @@ func ParsePayload(code []byte) (map[string]interface{}, error) {
 			}
 
 			res["amount"] = amount
-			if common.ToHexString(common2.ToArrayReverse(code[l-25-20:l-25])) == contract.ZPT_CONTRACT_ADDRESS.ToHexString() {
+			if common.ToHexString(common2.ToArrayReverse(code[l-25-20:l-25])) == ZPT_CONTRACT_ADDRESS.ToHexString() {
 				res["asset"] = "zpt"
-			} else if common.ToHexString(common2.ToArrayReverse(code[l-25-20:l-25])) == contract.GALA_CONTRACT_ADDRESS.ToHexString() {
+			} else if common.ToHexString(common2.ToArrayReverse(code[l-25-20:l-25])) == GALA_CONTRACT_ADDRESS.ToHexString() {
 				res["asset"] = "gala"
 			} else {
 				return nil, fmt.Errorf("not zpt or gala contractAddress")
@@ -209,9 +211,9 @@ func ParsePayload(code []byte) (map[string]interface{}, error) {
 				amount = common.BigIntFromEmbeddedBytes(amountBytes).Uint64()
 			}
 			res["amount"] = amount
-			if common.ToHexString(common2.ToArrayReverse(code[l-25-20:l-25])) == contract.ZPT_CONTRACT_ADDRESS.ToHexString() {
+			if common.ToHexString(common2.ToArrayReverse(code[l-25-20:l-25])) == ZPT_CONTRACT_ADDRESS.ToHexString() {
 				res["asset"] = "zpt"
-			} else if common.ToHexString(common2.ToArrayReverse(code[l-25-20:l-25])) == contract.GALA_CONTRACT_ADDRESS.ToHexString() {
+			} else if common.ToHexString(common2.ToArrayReverse(code[l-25-20:l-25])) == GALA_CONTRACT_ADDRESS.ToHexString() {
 				res["asset"] = "gala"
 				res["amount"] = amount
 			}
@@ -258,7 +260,7 @@ func ignoreOpCode(source *common.ZeroCopySource) error {
 		if eof {
 			return io.EOF
 		}
-		if contract.OPCODE_IN_PAYLOAD[by] {
+		if OPCODE_IN_PAYLOAD[by] {
 			continue
 		} else {
 			return nil
@@ -320,9 +322,9 @@ func (this *ZeepinSdk) NewInvokeTransaction(gasPrice, gasLimit uint64, invokeCod
 	return tx
 }
 
-func (this *ZeepinSdk) SignToTransaction(tx *types.MutableTransaction, signer account.Signer) error {
+func (this *ZeepinSdk) SignToTransaction(tx *types.MutableTransaction, signer Signer) error {
 	if tx.Payer == common.ADDRESS_EMPTY {
-		account, ok := signer.(*account.Account)
+		account, ok := signer.(*Account)
 		if ok {
 			tx.Payer = account.Address
 		}
@@ -350,7 +352,7 @@ func (this *ZeepinSdk) SignToTransaction(tx *types.MutableTransaction, signer ac
 	return nil
 }
 
-func (this *ZeepinSdk) MultiSignToTransaction(tx *types.MutableTransaction, m uint16, pubKeys []keypair.PublicKey, signer account.Signer) error {
+func (this *ZeepinSdk) MultiSignToTransaction(tx *types.MutableTransaction, m uint16, pubKeys []keypair.PublicKey, signer Signer) error {
 	pkSize := len(pubKeys)
 	if m == 0 || int(m) > pkSize || pkSize > constants.MULTI_SIG_MAX_PUBKEY_SIZE {
 		return fmt.Errorf("both m and number of pub key must larger than 0, and small than %d, and m must smaller than pub key number", constants.MULTI_SIG_MAX_PUBKEY_SIZE)

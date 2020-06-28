@@ -1,4 +1,4 @@
-package account
+package Zeepin_Go_Sdk
 
 import (
 	"bytes"

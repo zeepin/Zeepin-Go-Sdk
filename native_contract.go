@@ -1,4 +1,4 @@
-package contract
+package Zeepin_Go_Sdk
 
 import (
 	"bytes"
@@ -14,8 +14,6 @@ import (
 	"github.com/zeepin/ZeepinChain/smartcontract/service/native/zpt"
 	sdkcom "github.com/zeepin/Zeepin-Go-Sdk/common"
 	"github.com/zeepin/Zeepin-Go-Sdk/utils"
-	sdk "github.com/zeepin/Zeepin-Go-Sdk"
-	"github.com/zeepin/Zeepin-Go-Sdk/account"
 )
 
 var (
@@ -40,7 +38,7 @@ var OPCODE_IN_PAYLOAD = map[byte]bool{0x00: true, 0xc6: true, 0x6b: true, 0x6a: 
 	0x7c: true, 0x51: true, 0xc1: true}
 
 type NativeContract struct {
-	zptSdk       *sdk.ZeepinSdk
+	zptSdk       *ZeepinSdk
 	Zpt          *Zpt
 	Gala         *Gala
 	ZptId        *ZptId
@@ -48,7 +46,7 @@ type NativeContract struct {
 	Auth         *Auth
 }
 
-func NewNativeContract(zptSdk *sdk.ZeepinSdk) *NativeContract {
+func NewNativeContract(zptSdk *ZeepinSdk) *NativeContract {
 	native := &NativeContract{zptSdk: zptSdk}
 	native.Zpt = &Zpt{native: native, zptSdk: zptSdk}
 	native.Gala = &Gala{native: native, zptSdk: zptSdk}
@@ -83,7 +81,7 @@ func (this *NativeContract) NewNativeInvokeTransaction(
 func (this *NativeContract) InvokeNativeContract(
 	gasPrice,
 	gasLimit uint64,
-	singer *account.Account,
+	singer *Account,
 	version byte,
 	contractAddress common.Address,
 	method string,
@@ -114,7 +112,7 @@ func (this *NativeContract) PreExecInvokeNativeContract(
 }
 
 type Zpt struct {
-	zptSdk *sdk.ZeepinSdk
+	zptSdk *ZeepinSdk
 	native *NativeContract
 }
 
@@ -127,7 +125,7 @@ func (this *Zpt) NewTransferTransaction(gasPrice, gasLimit uint64, from, to comm
 	return this.NewMultiTransferTransaction(gasPrice, gasLimit, []*zpt.State{state})
 }
 
-func (this *Zpt) Transfer(gasPrice, gasLimit uint64, from *account.Account, to common.Address, amount uint64) (common.Uint256, error) {
+func (this *Zpt) Transfer(gasPrice, gasLimit uint64, from *Account, to common.Address, amount uint64) (common.Uint256, error) {
 	tx, err := this.NewTransferTransaction(gasPrice, gasLimit, from.Address, to, amount)
 	if err != nil {
 		return common.UINT256_EMPTY, err
@@ -149,7 +147,7 @@ func (this *Zpt) NewMultiTransferTransaction(gasPrice, gasLimit uint64, states [
 		[]interface{}{states})
 }
 
-func (this *Zpt) MultiTransfer(gasPrice, gasLimit uint64, states []*zpt.State, signer *account.Account) (common.Uint256, error) {
+func (this *Zpt) MultiTransfer(gasPrice, gasLimit uint64, states []*zpt.State, signer *Account) (common.Uint256, error) {
 	tx, err := this.NewMultiTransferTransaction(gasPrice, gasLimit, states)
 	if err != nil {
 		return common.UINT256_EMPTY, err
@@ -178,7 +176,7 @@ func (this *Zpt) NewTransferFromTransaction(gasPrice, gasLimit uint64, sender, f
 	)
 }
 
-func (this *Zpt) TransferFrom(gasPrice, gasLimit uint64, sender *account.Account, from, to common.Address, amount uint64) (common.Uint256, error) {
+func (this *Zpt) TransferFrom(gasPrice, gasLimit uint64, sender *Account, from, to common.Address, amount uint64) (common.Uint256, error) {
 	tx, err := this.NewTransferFromTransaction(gasPrice, gasLimit, sender.Address, from, to, amount)
 	if err != nil {
 		return common.UINT256_EMPTY, err
@@ -206,7 +204,7 @@ func (this *Zpt) NewApproveTransaction(gasPrice, gasLimit uint64, from, to commo
 	)
 }
 
-func (this *Zpt) Approve(gasPrice, gasLimit uint64, from *account.Account, to common.Address, amount uint64) (common.Uint256, error) {
+func (this *Zpt) Approve(gasPrice, gasLimit uint64, from *Account, to common.Address, amount uint64) (common.Uint256, error) {
 	tx, err := this.NewApproveTransaction(gasPrice, gasLimit, from.Address, to, amount)
 	if err != nil {
 		return common.UINT256_EMPTY, err
@@ -252,7 +250,8 @@ func (this *Zpt) Symbol() (string, error) {
 	return preResult.Result.ToString()
 }
 
-func (this *Zpt) BalanceOf(address common.Address) (uint64, error) {
+func (this *Zpt) BalanceOf(addr string) (uint64, error) {
+	address,_ := utils.AddressFromHexString(addr)
 	preResult, err := this.native.PreExecInvokeNativeContract(
 		ZPT_CONTRACT_ADDRESS,
 		ZPT_CONTRACT_VERSION,
@@ -317,7 +316,7 @@ func (this *Zpt) TotalSupply() (uint64, error) {
 }
 
 type Gala struct {
-	zptSdk *sdk.ZeepinSdk
+	zptSdk *ZeepinSdk
 	native *NativeContract
 }
 
@@ -330,7 +329,8 @@ func (this *Gala) NewTransferTransaction(gasPrice, gasLimit uint64, from, to com
 	return this.NewMultiTransferTransaction(gasPrice, gasLimit, []*zpt.State{state})
 }
 
-func (this *Gala) Transfer(gasPrice, gasLimit uint64, from *account.Account, to common.Address, amount uint64) (common.Uint256, error) {
+func (this *Gala) Transfer(gasPrice, gasLimit uint64, from *Account, toaddress string, amount uint64) (common.Uint256, error) {
+	to, _ := utils.AddressFromHexString(toaddress)
 	tx, err := this.NewTransferTransaction(gasPrice, gasLimit, from.Address, to, amount)
 	if err != nil {
 		return common.UINT256_EMPTY, err
@@ -352,7 +352,7 @@ func (this *Gala) NewMultiTransferTransaction(gasPrice, gasLimit uint64, states 
 		[]interface{}{states})
 }
 
-func (this *Gala) MultiTransfer(gasPrice, gasLimit uint64, states []*zpt.State, signer *account.Account) (common.Uint256, error) {
+func (this *Gala) MultiTransfer(gasPrice, gasLimit uint64, states []*zpt.State, signer *Account) (common.Uint256, error) {
 	tx, err := this.NewMultiTransferTransaction(gasPrice, gasLimit, states)
 	if err != nil {
 		return common.UINT256_EMPTY, err
@@ -381,7 +381,9 @@ func (this *Gala) NewTransferFromTransaction(gasPrice, gasLimit uint64, sender, 
 	)
 }
 
-func (this *Gala) TransferFrom(gasPrice, gasLimit uint64, sender *account.Account, from, to common.Address, amount uint64) (common.Uint256, error) {
+func (this *Gala) TransferFrom(gasPrice, gasLimit uint64, sender *Account, fromAddress, toAddress string, amount uint64) (common.Uint256, error) {
+	from, _ := utils.AddressFromHexString(fromAddress)
+	to, _ := utils.AddressFromHexString(toAddress)
 	tx, err := this.NewTransferFromTransaction(gasPrice, gasLimit, sender.Address, from, to, amount)
 	if err != nil {
 		return common.UINT256_EMPTY, err
@@ -397,7 +399,7 @@ func (this *Gala) NewWithdrawGalaTransaction(gasPrice, gasLimit uint64, address 
 	return this.NewTransferFromTransaction(gasPrice, gasLimit, address, ZPT_CONTRACT_ADDRESS, address, amount)
 }
 
-func (this *Gala) WithdrawGala(gasPrice, gasLimit uint64, address *account.Account, amount uint64) (common.Uint256, error) {
+func (this *Gala) WithdrawGala(gasPrice, gasLimit uint64, address *Account, amount uint64) (common.Uint256, error) {
 	tx, err := this.NewWithdrawGalaTransaction(gasPrice, gasLimit, address.Address, amount)
 	if err != nil {
 		return common.UINT256_EMPTY, err
@@ -425,7 +427,8 @@ func (this *Gala) NewApproveTransaction(gasPrice, gasLimit uint64, from, to comm
 	)
 }
 
-func (this *Gala) Approve(gasPrice, gasLimit uint64, from *account.Account, to common.Address, amount uint64) (common.Uint256, error) {
+func (this *Gala) Approve(gasPrice, gasLimit uint64, from *Account, toAddress string, amount uint64) (common.Uint256, error) {
+	to, _ := utils.AddressFromHexString(toAddress)
 	tx, err := this.NewApproveTransaction(gasPrice, gasLimit, from.Address, to, amount)
 	if err != nil {
 		return common.UINT256_EMPTY, err
@@ -458,7 +461,8 @@ func (this *Gala) Allowance(from, to common.Address) (uint64, error) {
 	return balance.Uint64(), nil
 }
 
-func (this *Gala) UnboundGala(address common.Address) (uint64, error) {
+func (this *Gala) UnboundGala(addr string) (uint64, error) {
+	address, _ := utils.AddressFromHexString(addr)
 	return this.Allowance(ZPT_CONTRACT_ADDRESS, address)
 }
 
@@ -475,7 +479,8 @@ func (this *Gala) Symbol() (string, error) {
 	return preResult.Result.ToString()
 }
 
-func (this *Gala) BalanceOf(address common.Address) (uint64, error) {
+func (this *Gala) BalanceOf(addr string) (uint64, error) {
+	address, _ := utils.AddressFromHexString(addr)
 	preResult, err := this.native.PreExecInvokeNativeContract(
 		GALA_CONTRACT_ADDRESS,
 		GALA_CONTRACT_VERSION,
@@ -540,7 +545,7 @@ func (this *Gala) TotalSupply() (uint64, error) {
 }
 
 type ZptId struct {
-	zptSdk *sdk.ZeepinSdk
+	zptSdk *ZeepinSdk
 	native *NativeContract
 }
 
@@ -564,7 +569,7 @@ func (this *ZptId) NewRegIDWithPublicKeyTransaction(gasPrice, gasLimit uint64, z
 	)
 }
 
-func (this *ZptId) RegIDWithPublicKey(gasPrice, gasLimit uint64, signer *account.Account, zptId string, controller *account.Controller) (common.Uint256, error) {
+func (this *ZptId) RegIDWithPublicKey(gasPrice, gasLimit uint64, signer *Account, zptId string, controller *Controller) (common.Uint256, error) {
 	tx, err := this.NewRegIDWithPublicKeyTransaction(gasPrice, gasLimit, zptId, controller.PublicKey)
 	if err != nil {
 		return common.UINT256_EMPTY, err
@@ -580,11 +585,11 @@ func (this *ZptId) RegIDWithPublicKey(gasPrice, gasLimit uint64, signer *account
 	return this.zptSdk.SendTransaction(tx)
 }
 
-func (this *ZptId) NewRegIDWithAttributesTransaction(gasPrice, gasLimit uint64, zptId string, pubKey keypair.PublicKey, attributes []*account.DDOAttribute) (*types.MutableTransaction, error) {
+func (this *ZptId) NewRegIDWithAttributesTransaction(gasPrice, gasLimit uint64, zptId string, pubKey keypair.PublicKey, attributes []*DDOAttribute) (*types.MutableTransaction, error) {
 	type regIDWithAttribute struct {
 		ZptId      string
 		PubKey     []byte
-		Attributes []*account.DDOAttribute
+		Attributes []*DDOAttribute
 	}
 	return this.native.NewNativeInvokeTransaction(
 		gasPrice,
@@ -602,7 +607,7 @@ func (this *ZptId) NewRegIDWithAttributesTransaction(gasPrice, gasLimit uint64, 
 	)
 }
 
-func (this *ZptId) RegIDWithAttributes(gasPrice, gasLimit uint64, signer *account.Account, zptId string, controller *account.Controller, attributes []*account.DDOAttribute) (common.Uint256, error) {
+func (this *ZptId) RegIDWithAttributes(gasPrice, gasLimit uint64, signer *Account, zptId string, controller *Controller, attributes []*DDOAttribute) (common.Uint256, error) {
 	tx, err := this.NewRegIDWithAttributesTransaction(gasPrice, gasLimit, zptId, controller.PublicKey, attributes)
 	if err != nil {
 		return common.UINT256_EMPTY, err
@@ -618,7 +623,7 @@ func (this *ZptId) RegIDWithAttributes(gasPrice, gasLimit uint64, signer *accoun
 	return this.zptSdk.SendTransaction(tx)
 }
 
-func (this *ZptId) GetDDO(zptId string) (*account.DDO, error) {
+func (this *ZptId) GetDDO(zptId string) (*DDO, error) {
 	result, err := this.native.PreExecInvokeNativeContract(
 		ZPT_ID_CONTRACT_ADDRESS,
 		ZPT_ID_CONTRACT_VERSION,
@@ -659,7 +664,7 @@ func (this *ZptId) GetDDO(zptId string) (*account.DDO, error) {
 		addr = address.ToBase58()
 	}
 
-	ddo := &account.DDO{
+	ddo := &DDO{
 		ZptId:      zptId,
 		Owners:     owners,
 		Attributes: attrs,
@@ -689,7 +694,7 @@ func (this *ZptId) NewAddKeyTransaction(gasPrice, gasLimit uint64, zptId string,
 		})
 }
 
-func (this *ZptId) AddKey(gasPrice, gasLimit uint64, zptId string, signer *account.Account, newPubKey keypair.PublicKey, controller *account.Controller) (common.Uint256, error) {
+func (this *ZptId) AddKey(gasPrice, gasLimit uint64, zptId string, signer *Account, newPubKey keypair.PublicKey, controller *Controller) (common.Uint256, error) {
 	tx, err := this.NewAddKeyTransaction(gasPrice, gasLimit, zptId, newPubKey, controller.PublicKey)
 	if err != nil {
 		return common.UINT256_EMPTY, err
@@ -727,7 +732,7 @@ func (this *ZptId) NewRevokeKeyTransaction(gasPrice, gasLimit uint64, zptId stri
 	)
 }
 
-func (this *ZptId) RevokeKey(gasPrice, gasLimit uint64, zptId string, signer *account.Account, removedPubKey keypair.PublicKey, controller *account.Controller) (common.Uint256, error) {
+func (this *ZptId) RevokeKey(gasPrice, gasLimit uint64, zptId string, signer *Account, removedPubKey keypair.PublicKey, controller *Controller) (common.Uint256, error) {
 	tx, err := this.NewRevokeKeyTransaction(gasPrice, gasLimit, zptId, removedPubKey, controller.PublicKey)
 	if err != nil {
 		return common.UINT256_EMPTY, err
@@ -764,7 +769,7 @@ func (this *ZptId) NewSetRecoveryTransaction(gasPrice, gasLimit uint64, zptId st
 		})
 }
 
-func (this *ZptId) SetRecovery(gasPrice, gasLimit uint64, signer *account.Account, zptId string, recovery common.Address, controller *account.Controller) (common.Uint256, error) {
+func (this *ZptId) SetRecovery(gasPrice, gasLimit uint64, signer *Account, zptId string, recovery common.Address, controller *Controller) (common.Uint256, error) {
 	tx, err := this.NewSetRecoveryTransaction(gasPrice, gasLimit, zptId, recovery, controller.PublicKey)
 	if err != nil {
 		return common.UINT256_EMPTY, err
@@ -801,7 +806,7 @@ func (this *ZptId) NewChangeRecoveryTransaction(gasPrice, gasLimit uint64, zptId
 		})
 }
 
-func (this *ZptId) ChangeRecovery(gasPrice, gasLimit uint64, signer *account.Account, zptId string, newRecovery, oldRecovery common.Address, controller *account.Controller) (common.Uint256, error) {
+func (this *ZptId) ChangeRecovery(gasPrice, gasLimit uint64, signer *Account, zptId string, newRecovery, oldRecovery common.Address, controller *Controller) (common.Uint256, error) {
 	tx, err := this.NewChangeRecoveryTransaction(gasPrice, gasLimit, zptId, newRecovery, oldRecovery)
 	if err != nil {
 		return common.UINT256_EMPTY, err
@@ -817,10 +822,10 @@ func (this *ZptId) ChangeRecovery(gasPrice, gasLimit uint64, signer *account.Acc
 	return this.zptSdk.SendTransaction(tx)
 }
 
-func (this *ZptId) NewAddAttributesTransaction(gasPrice, gasLimit uint64, zptId string, attributes []*account.DDOAttribute, pubKey keypair.PublicKey) (*types.MutableTransaction, error) {
+func (this *ZptId) NewAddAttributesTransaction(gasPrice, gasLimit uint64, zptId string, attributes []*DDOAttribute, pubKey keypair.PublicKey) (*types.MutableTransaction, error) {
 	type addAttributes struct {
 		ZptId      string
-		Attributes []*account.DDOAttribute
+		Attributes []*DDOAttribute
 		PubKey     []byte
 	}
 	return this.native.NewNativeInvokeTransaction(
@@ -838,7 +843,7 @@ func (this *ZptId) NewAddAttributesTransaction(gasPrice, gasLimit uint64, zptId 
 		})
 }
 
-func (this *ZptId) AddAttributes(gasPrice, gasLimit uint64, signer *account.Account, zptId string, attributes []*account.DDOAttribute, controller *account.Controller) (common.Uint256, error) {
+func (this *ZptId) AddAttributes(gasPrice, gasLimit uint64, signer *Account, zptId string, attributes []*DDOAttribute, controller *Controller) (common.Uint256, error) {
 	tx, err := this.NewAddAttributesTransaction(gasPrice, gasLimit, zptId, attributes, controller.PublicKey)
 	if err != nil {
 		return common.UINT256_EMPTY, err
@@ -876,7 +881,7 @@ func (this *ZptId) NewRemoveAttributeTransaction(gasPrice, gasLimit uint64, zptI
 		})
 }
 
-func (this *ZptId) RemoveAttribute(gasPrice, gasLimit uint64, signer *account.Account, zptId string, removeKey []byte, controller *account.Controller) (common.Uint256, error) {
+func (this *ZptId) RemoveAttribute(gasPrice, gasLimit uint64, signer *Account, zptId string, removeKey []byte, controller *Controller) (common.Uint256, error) {
 	tx, err := this.NewRemoveAttributeTransaction(gasPrice, gasLimit, zptId, removeKey, controller.PublicKey)
 	if err != nil {
 		return common.UINT256_EMPTY, err
@@ -893,7 +898,7 @@ func (this *ZptId) RemoveAttribute(gasPrice, gasLimit uint64, signer *account.Ac
 	return this.zptSdk.SendTransaction(tx)
 }
 
-func (this *ZptId) GetAttributes(zptId string) ([]*account.DDOAttribute, error) {
+func (this *ZptId) GetAttributes(zptId string) ([]*DDOAttribute, error) {
 	preResult, err := this.native.PreExecInvokeNativeContract(
 		ZPT_ID_CONTRACT_ADDRESS,
 		ZPT_ID_CONTRACT_VERSION,
@@ -909,9 +914,9 @@ func (this *ZptId) GetAttributes(zptId string) ([]*account.DDOAttribute, error) 
 	return this.getAttributes(zptId, data)
 }
 
-func (this *ZptId) getAttributes(zptId string, data []byte) ([]*account.DDOAttribute, error) {
+func (this *ZptId) getAttributes(zptId string, data []byte) ([]*DDOAttribute, error) {
 	buf := bytes.NewBuffer(data)
-	attributes := make([]*account.DDOAttribute, 0)
+	attributes := make([]*DDOAttribute, 0)
 	for {
 		if buf.Len() == 0 {
 			break
@@ -928,7 +933,7 @@ func (this *ZptId) getAttributes(zptId string, data []byte) ([]*account.DDOAttri
 		if err != nil {
 			return nil, fmt.Errorf("value ReadVarBytes error:%s", err)
 		}
-		attributes = append(attributes, &account.DDOAttribute{
+		attributes = append(attributes, &DDOAttribute{
 			Key:       key,
 			Value:     value,
 			ValueType: valueType,
@@ -941,7 +946,7 @@ func (this *ZptId) getAttributes(zptId string, data []byte) ([]*account.DDOAttri
 	return attributes, nil
 }
 
-func (this *ZptId) VerifySignature(zptId string, keyIndex int, controller *account.Controller) (bool, error) {
+func (this *ZptId) VerifySignature(zptId string, keyIndex int, controller *Controller) (bool, error) {
 	tx, err := this.native.NewNativeInvokeTransaction(
 		0, 0,
 		ZPT_ID_CONTRACT_VERSION,
@@ -962,7 +967,7 @@ func (this *ZptId) VerifySignature(zptId string, keyIndex int, controller *accou
 	return preResult.Result.ToBool()
 }
 
-func (this *ZptId) GetPublicKeys(zptId string) ([]*account.DDOOwner, error) {
+func (this *ZptId) GetPublicKeys(zptId string) ([]*DDOOwner, error) {
 	preResult, err := this.native.PreExecInvokeNativeContract(
 		ZPT_ID_CONTRACT_ADDRESS,
 		ZPT_ID_CONTRACT_VERSION,
@@ -980,9 +985,9 @@ func (this *ZptId) GetPublicKeys(zptId string) ([]*account.DDOOwner, error) {
 	return this.getPublicKeys(zptId, data)
 }
 
-func (this *ZptId) getPublicKeys(zptId string, data []byte) ([]*account.DDOOwner, error) {
+func (this *ZptId) getPublicKeys(zptId string, data []byte) ([]*DDOOwner, error) {
 	buf := bytes.NewBuffer(data)
-	owners := make([]*account.DDOOwner, 0)
+	owners := make([]*DDOOwner, 0)
 	for {
 		if buf.Len() == 0 {
 			break
@@ -1001,11 +1006,11 @@ func (this *ZptId) getPublicKeys(zptId string, data []byte) ([]*account.DDOOwner
 			return nil, fmt.Errorf("DeserializePublicKey Index:%d error:%s", index, err)
 		}
 		keyType := keypair.GetKeyType(pubKey)
-		owner := &account.DDOOwner{
+		owner := &DDOOwner{
 			PubKeyIndex: index,
 			PubKeyId:    pubKeyId,
-			Type:        account.GetKeyTypeString(keyType),
-			Curve:       account.GetCurveName(pkData),
+			Type:        GetKeyTypeString(keyType),
+			Curve:       GetCurveName(pkData),
 			Value:       hex.EncodeToString(pkData),
 		}
 		owners = append(owners, owner)
@@ -1035,7 +1040,7 @@ func (this *ZptId) GetKeyState(zptId string, keyIndex int) (string, error) {
 }
 
 type GlobalParam struct {
-	zptSdk *sdk.ZeepinSdk
+	zptSdk *ZeepinSdk
 	native *NativeContract
 }
 
@@ -1082,7 +1087,7 @@ func (this *GlobalParam) NewSetGlobalParamsTransaction(gasPrice, gasLimit uint64
 		[]interface{}{globalParams})
 }
 
-func (this *GlobalParam) SetGlobalParams(gasPrice, gasLimit uint64, signer *account.Account, params map[string]string) (common.Uint256, error) {
+func (this *GlobalParam) SetGlobalParams(gasPrice, gasLimit uint64, signer *Account, params map[string]string) (common.Uint256, error) {
 	tx, err := this.NewSetGlobalParamsTransaction(gasPrice, gasLimit, params)
 	if err != nil {
 		return common.UINT256_EMPTY, err
@@ -1104,7 +1109,7 @@ func (this *GlobalParam) NewTransferAdminTransaction(gasPrice, gasLimit uint64, 
 		[]interface{}{newAdmin})
 }
 
-func (this *GlobalParam) TransferAdmin(gasPrice, gasLimit uint64, signer *account.Account, newAdmin common.Address) (common.Uint256, error) {
+func (this *GlobalParam) TransferAdmin(gasPrice, gasLimit uint64, signer *Account, newAdmin common.Address) (common.Uint256, error) {
 	tx, err := this.NewTransferAdminTransaction(gasPrice, gasLimit, newAdmin)
 	if err != nil {
 		return common.UINT256_EMPTY, err
@@ -1126,7 +1131,7 @@ func (this *GlobalParam) NewAcceptAdminTransaction(gasPrice, gasLimit uint64, ad
 		[]interface{}{admin})
 }
 
-func (this *GlobalParam) AcceptAdmin(gasPrice, gasLimit uint64, signer *account.Account) (common.Uint256, error) {
+func (this *GlobalParam) AcceptAdmin(gasPrice, gasLimit uint64, signer *Account) (common.Uint256, error) {
 	tx, err := this.NewAcceptAdminTransaction(gasPrice, gasLimit, signer.Address)
 	if err != nil {
 		return common.UINT256_EMPTY, err
@@ -1149,7 +1154,7 @@ func (this *GlobalParam) NewSetOperatorTransaction(gasPrice, gasLimit uint64, op
 	)
 }
 
-func (this *GlobalParam) SetOperator(gasPrice, gasLimit uint64, signer *account.Account, operator common.Address) (common.Uint256, error) {
+func (this *GlobalParam) SetOperator(gasPrice, gasLimit uint64, signer *Account, operator common.Address) (common.Uint256, error) {
 	tx, err := this.NewSetOperatorTransaction(gasPrice, gasLimit, operator)
 	if err != nil {
 		return common.UINT256_EMPTY, err
@@ -1172,7 +1177,7 @@ func (this *GlobalParam) NewCreateSnapshotTransaction(gasPrice, gasLimit uint64)
 	)
 }
 
-func (this *GlobalParam) CreateSnapshot(gasPrice, gasLimit uint64, signer *account.Account) (common.Uint256, error) {
+func (this *GlobalParam) CreateSnapshot(gasPrice, gasLimit uint64, signer *Account) (common.Uint256, error) {
 	tx, err := this.NewCreateSnapshotTransaction(gasPrice, gasLimit)
 	if err != nil {
 		return common.UINT256_EMPTY, err
@@ -1185,7 +1190,7 @@ func (this *GlobalParam) CreateSnapshot(gasPrice, gasLimit uint64, signer *accou
 }
 
 type Auth struct {
-	zptSdk *sdk.ZeepinSdk
+	zptSdk *ZeepinSdk
 	native *NativeContract
 }
 
@@ -1205,7 +1210,7 @@ func (this *Auth) NewAssignFuncsToRoleTransaction(gasPrice, gasLimit uint64, con
 		})
 }
 
-func (this *Auth) AssignFuncsToRole(gasPrice, gasLimit uint64, contractAddress common.Address, signer *account.Account, adminId, role []byte, funcNames []string, keyIndex int) (common.Uint256, error) {
+func (this *Auth) AssignFuncsToRole(gasPrice, gasLimit uint64, contractAddress common.Address, signer *Account, adminId, role []byte, funcNames []string, keyIndex int) (common.Uint256, error) {
 	tx, err := this.NewAssignFuncsToRoleTransaction(gasPrice, gasLimit, contractAddress, adminId, role, funcNames, keyIndex)
 	if err != nil {
 		return common.UINT256_EMPTY, err
@@ -1235,7 +1240,7 @@ func (this *Auth) NewDelegateTransaction(gasPrice, gasLimit uint64, contractAddr
 		})
 }
 
-func (this *Auth) Delegate(gasPrice, gasLimit uint64, signer *account.Account, contractAddress common.Address, from, to, role []byte, period, level, keyIndex int) (common.Uint256, error) {
+func (this *Auth) Delegate(gasPrice, gasLimit uint64, signer *Account, contractAddress common.Address, from, to, role []byte, period, level, keyIndex int) (common.Uint256, error) {
 	tx, err := this.NewDelegateTransaction(gasPrice, gasLimit, contractAddress, from, to, role, period, level, keyIndex)
 	if err != nil {
 		return common.UINT256_EMPTY, err
@@ -1263,7 +1268,7 @@ func (this *Auth) NewWithdrawTransaction(gasPrice, gasLimit uint64, contractAddr
 		})
 }
 
-func (this *Auth) Withdraw(gasPrice, gasLimit uint64, signer *account.Account, contractAddress common.Address, initiator, delegate, role []byte, keyIndex int) (common.Uint256, error) {
+func (this *Auth) Withdraw(gasPrice, gasLimit uint64, signer *Account, contractAddress common.Address, initiator, delegate, role []byte, keyIndex int) (common.Uint256, error) {
 	tx, err := this.NewWithdrawTransaction(gasPrice, gasLimit, contractAddress, initiator, delegate, role, keyIndex)
 	if err != nil {
 		return common.UINT256_EMPTY, err
@@ -1291,7 +1296,7 @@ func (this *Auth) NewAssignOntIDsToRoleTransaction(gasPrice, gasLimit uint64, co
 		})
 }
 
-func (this *Auth) AssignOntIDsToRole(gasPrice, gasLimit uint64, signer *account.Account, contractAddress common.Address, admontId, role []byte, persons [][]byte, keyIndex int) (common.Uint256, error) {
+func (this *Auth) AssignOntIDsToRole(gasPrice, gasLimit uint64, signer *Account, contractAddress common.Address, admontId, role []byte, persons [][]byte, keyIndex int) (common.Uint256, error) {
 	tx, err := this.NewAssignOntIDsToRoleTransaction(gasPrice, gasLimit, contractAddress, admontId, role, persons, keyIndex)
 	if err != nil {
 		return common.UINT256_EMPTY, err
@@ -1317,7 +1322,7 @@ func (this *Auth) NewTransferTransaction(gasPrice, gasLimit uint64, contractAddr
 		})
 }
 
-func (this *Auth) Transfer(gasPrice, gasLimit uint64, signer *account.Account, contractAddress common.Address, newAdminId []byte, keyIndex int) (common.Uint256, error) {
+func (this *Auth) Transfer(gasPrice, gasLimit uint64, signer *Account, contractAddress common.Address, newAdminId []byte, keyIndex int) (common.Uint256, error) {
 	tx, err := this.NewTransferTransaction(gasPrice, gasLimit, contractAddress, newAdminId, keyIndex)
 	if err != nil {
 		return common.UINT256_EMPTY, err
@@ -1344,7 +1349,7 @@ func (this *Auth) NewVerifyTokenTransaction(gasPrice, gasLimit uint64, contractA
 		})
 }
 
-func (this *Auth) VerifyToken(gasPrice, gasLimit uint64, signer *account.Account, contractAddress common.Address, caller []byte, funcName string, keyIndex int) (common.Uint256, error) {
+func (this *Auth) VerifyToken(gasPrice, gasLimit uint64, signer *Account, contractAddress common.Address, caller []byte, funcName string, keyIndex int) (common.Uint256, error) {
 	tx, err := this.NewVerifyTokenTransaction(gasPrice, gasLimit, contractAddress, caller, funcName, keyIndex)
 	if err != nil {
 		return common.UINT256_EMPTY, err

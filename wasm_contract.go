@@ -1,4 +1,4 @@
-package contract
+package Zeepin_Go_Sdk
 
 import (
 	"fmt"
@@ -6,15 +6,13 @@ import (
 	"github.com/zeepin/ZeepinChain/core/types"
 	"github.com/zeepin/Zeepin-Go-Sdk/utils"
 	sdkcom "github.com/zeepin/Zeepin-Go-Sdk/common"
-	sdk "github.com/zeepin/Zeepin-Go-Sdk"
-	"github.com/zeepin/Zeepin-Go-Sdk/account"
 )
 
 type WasmVMContract struct {
-	zptSdk       *sdk.ZeepinSdk
+	zptSdk       *ZeepinSdk
 }
 
-func NewWasmVMContract(zptSdk *sdk.ZeepinSdk) *WasmVMContract{
+func NewWasmVMContract(zptSdk *ZeepinSdk) *WasmVMContract{
 	return  &WasmVMContract{
 		zptSdk: zptSdk,
 	}
@@ -36,7 +34,7 @@ func(this *WasmVMContract) NewWasmVMInvokeTransaction(
 func (this *WasmVMContract) SendWasmTransaction(
 	gasPrice,
 	gasLimit uint64,
-	signer *account.Account,
+	signer *Account,
 	contractAddr string,
 	args []interface{},
 	method string) (common.Uint256, error) {
@@ -71,7 +69,7 @@ func (this *WasmVMContract) MakeWasmTransaction(
 func (this *WasmVMContract) PreExecInvokeWasmVMContract(
 	gasPrice,
 	gasLimit uint64,
-	signer *account.Account,
+	signer *Account,
 	contractAddr string,
 	args []interface{},
 	method string) (*sdkcom.PreExecResult, error) {
